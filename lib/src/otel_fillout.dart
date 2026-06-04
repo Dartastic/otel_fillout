@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_fillout_suppression.dart';
 
@@ -46,39 +45,49 @@ Future<T> tracedFillout<T>({
   final t = tracer ?? OTel.tracerProvider().getTracer('otel_fillout');
   final span = t.startSpan('fillout $operation', kind: SpanKind.client);
   try {
-    span.setStringAttribute('rpc.system', 'fillout');
+    span.addAttributes(
+        OTel.attributes([OTel.attributeString('rpc.system', 'fillout')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.workspaceId != null) {
-        span.setStringAttribute('fillout.workspace.id', res.workspaceId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('fillout.workspace.id', res.workspaceId!)]));
       }
       if (res.formId != null) {
-        span.setStringAttribute('fillout.form.id', res.formId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('fillout.form.id', res.formId!)]));
       }
       if (res.formName != null) {
-        span.setStringAttribute('fillout.form.name', res.formName!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('fillout.form.name', res.formName!)]));
       }
       if (res.submissionId != null) {
-        span.setStringAttribute('fillout.submission.id', res.submissionId!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('fillout.submission.id', res.submissionId!)
+        ]));
       }
       if (res.status != null) {
-        span.setStringAttribute('fillout.submission.status', res.status!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('fillout.submission.status', res.status!)]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('fillout.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('fillout.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'fillout.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'fillout.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
